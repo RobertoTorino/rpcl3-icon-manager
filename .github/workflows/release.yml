@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    fail-fast: true
+#    fail-fast: true
     runs-on: windows-latest
     permissions:
       contents: write
