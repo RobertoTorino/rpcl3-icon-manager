@@ -53,7 +53,13 @@ jobs:
           }
 
           # --- Compile ---
-          & $ahkCompiler /in $input /out $output /icon $icon /base $baseFile
+            Write-Host ":: Starting AHK compilation"
+            & $ahkCompiler /in $input /out $output /icon $icon /base $baseFile
+            
+            if (!(Test-Path $output)) {
+            Write-Error ":: Ahk2Exe did not produce an output file."
+            exit 1
+          }
 
           $repoRoot   = $env:GITHUB_WORKSPACE
           $compiledExe = Join-Path $PWD $output
