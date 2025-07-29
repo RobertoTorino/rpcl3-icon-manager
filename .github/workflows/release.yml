@@ -3,11 +3,10 @@ name: CI Build and Release
 on:
   push:
     tags:
-      - 'v*'  # Trigger on version tags like v1.0.0
+      - 'v*'  # Triggers on tags like v1.0.0
 
 jobs:
   build:
-#    fail-fast: true
     runs-on: windows-latest
     permissions:
       contents: write
@@ -23,107 +22,98 @@ jobs:
           $OutputEncoding = [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           Write-Host "Using PowerShell version: $($PSVersionTable.PSVersion)"
 
-      - name: Build EXE, move to root, UPX and create ZIP
+      - name: Build EXE, gather assets, create ZIP
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
 
-          $ahkCompiler    = "ahk\Compiler\Ahk2Exe.exe"
-          $baseFile       = "ahk\Compiler\Unicode 32-bit.bin"
-          $input          = "rpcl3im.ahk"
-          $repoRoot       = $env:GITHUB_WORKSPACE
-          $output         = Join-Path $repoRoot "rpcl3im.exe"
-          $zipName        = "rpcl3im_release.zip"
-          $icon           = "rpcl3_media\rpcl3v2.ico"
-          $versionTxt     = "version.txt"
-          $versionDat     = "version.dat"
-          $versionTpl     = "version_template.txt"
-          $sqliteDll      = "sqlite3.dll"
-          $mediaFolder    = "rpcl3_media"
-          $toolsFolder    = "rpcl3_tools"
-          $emptyFolders   = @("rpcl3_captures","rpcl3_icons","rpcl3_recordings","rpcl3_screenshots")
-          $extraAssets    = @("README.txt", "rpcl3.ini", "LICENSE", "games.db", $sqliteDll, $versionTxt, $versionDat, $versionTpl)
-          $allFiles       = @()
+          $repoRoot     = $env:GITHUB_WORKSPACE
+          $ahkCompiler  = "ahk\Compiler\Ahk2Exe.exe"
+          $baseFile     = "ahk\Compiler\Unicode 32-bit.bin"
+          $input        = "rpcl3im.ahk"
+          $outputName   = "rpcl3im.exe"
+          $icon         = "rpcl3_media\rpcl3v2.ico"
+          $zipName      = "rpcl3im_release.zip"
 
+          $extraAssets = @(
+            "README.txt", "rpcl3.ini", "LICENSE", "games.db",
+            "sqlite3.dll", "version.txt", "version.dat", "version_template.txt"
+          )
+          $mediaFolder  = "rpcl3_media"
+          $toolsFolder  = "rpcl3_tools"
+          $emptyFolders = @("rpcl3_captures", "rpcl3_icons", "rpcl3_recordings", "rpcl3_screenshots")
+
+          # Verify required files
           foreach ($file in @($ahkCompiler, $baseFile, $input)) {
             if (!(Test-Path $file)) {
-              Write-Error "Required file not found: $file"
+              Write-Error "Missing required file: $file"
               exit 1
             }
             Write-Host ":: Found: $file"
           }
 
-          # --- Compile ---
-          Write-Host ":: Starting AHK compilation"          
-          & $ahkCompiler /in $input /out $output /icon $icon /base $baseFile
-
-          # --- Always move EXE to $env:GITHUB_WORKSPACE ---
-          $repoRoot = $env:GITHUB_WORKSPACE
-          $compiledExe = Join-Path $PWD $output
-          $finalExe    = Join-Path $repoRoot $output
-
-            if (!(Test-Path $output)) {
-            Write-Error ":: Ahk2Exe did not produce an output file at $output."
+          # Compile
+          & $ahkCompiler /in $input /out $outputName /icon $icon /base $baseFile
+          if (!(Test-Path $outputName)) {
+            Write-Error ":: Compilation failed: $outputName not found"
             exit 1
           }
-            Write-Host ":: Successfully compiled as $output"
+          Write-Host ":: Compiled EXE: $outputName"
 
-          # Add media folder files
-          if (Test-Path $mediaFolder) {
-            $mediaFiles = Get-ChildItem -Path $mediaFolder -File | ForEach-Object { $_.FullName }
-            if ($mediaFiles) {
-              $allFiles += $mediaFiles
-              Write-Host "Added $($mediaFiles.Count) files from $mediaFolder"
-            }
+          # Move EXE to repo root
+          $finalExe = Join-Path $repoRoot $outputName
+          Move-Item $outputName $finalExe -Force
+
+          # Optional: UPX compression
+          $upxPath = "upx\upx.exe"
+          if (Test-Path $upxPath) {
+            & $upxPath --best --lzma $finalExe
+            Write-Host ":: Compressed with UPX"
           } else {
-            Write-Host "Warning: $mediaFolder not found!" -ForegroundColor Yellow
+            Write-Host ":: UPX not found, skipping compression"
           }
 
-          # Add tools folder files
-          if (Test-Path $toolsFolder) {
-            $toolsFiles = Get-ChildItem -Path $toolsFolder -Recurse | Where-Object { !$_.PSIsContainer } | ForEach-Object { $_.FullName }
-            if ($toolsFiles) {
-              $allFiles += $toolsFiles
-              Write-Host "Added $($toolsFiles.Count) files from $toolsFolder"
-            }
-          } else {
-            Write-Host "Warning: $toolsFolder not found!" -ForegroundColor Yellow
-          }
-
-          # Add placeholder files for empty folders
-          foreach ($folder in $emptyFolders) {
-            if (-not (Test-Path $folder)) {
-              New-Item -ItemType Directory -Path $folder -Force | Out-Null
-            }
-            $placeholderPath = "$folder\.placeholder"
-            New-Item -Path $placeholderPath -ItemType File -Force | Out-Null
-            $allFiles += $placeholderPath
-            Write-Host "Added placeholder: $placeholderPath"
-          }
-
-          # Clean up any missing files from allFiles
-          $allFiles = $allFiles | Where-Object { $_ -and (Test-Path $_) }
-
-          # --- UPX ---
-          if (Test-Path "upx\upx.exe") {
-            & "upx\upx.exe" --best --lzma $finalExe
-          }
-
-          # --- ZIP ---
+          # Gather all files for ZIP
           $toZip = @($finalExe)
+
           foreach ($asset in $extraAssets) {
-            $assetAbs = Join-Path $repoRoot $asset
-            if (Test-Path $assetAbs) {
-              $toZip += $assetAbs
-              Write-Host ":: Added to zip: $assetAbs"
+            $path = Join-Path $repoRoot $asset
+            if (Test-Path $path) {
+              $toZip += $path
+              Write-Host ":: Added asset: $asset"
             } else {
-              Write-Warning "Not adding (missing): $assetAbs"
+              Write-Warning "Missing asset: $asset"
             }
           }
+
+          foreach ($folder in @($mediaFolder, $toolsFolder)) {
+            if (Test-Path $folder) {
+              $files = Get-ChildItem -Path $folder -Recurse -File | Select-Object -ExpandProperty FullName
+              $toZip += $files
+              Write-Host ":: Added folder: $folder"
+            } else {
+              Write-Warning "Missing folder: $folder"
+            }
+          }
+
+          # Create empty .placeholder files
+          foreach ($folder in $emptyFolders) {
+            $full = Join-Path $repoRoot $folder
+            if (!(Test-Path $full)) {
+              New-Item -ItemType Directory -Path $full -Force | Out-Null
+            }
+            $placeholder = Join-Path $full ".placeholder"
+            New-Item -ItemType File -Path $placeholder -Force | Out-Null
+            $toZip += $placeholder
+            Write-Host ":: Created: $placeholder"
+          }
+
+          # Create the ZIP
           $zipPath = Join-Path $repoRoot $zipName
           Compress-Archive -Path $toZip -DestinationPath $zipPath -Force
+          Write-Host ":: ZIP created at $zipPath"
 
-      - name: Upload EXE and ZIP to GitHub Release
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
