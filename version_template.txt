@@ -1,0 +1,9 @@
+CompanyName=@game_play267
+FileDescription=RPCS3 Icon Manager
+FileVersion=%%VERSION%%
+InternalName=RPCS3 Icon Manager
+OriginalFilename=rpcl3.exe
+ProductName=RPCS3 Icon Manager
+ProductVersion=%%VERSION%%
+LegalCopyright=© 2025 Philip
+Comments=Built on %%DATETIME%% | Git Tag: %%GIT_TAG%%
