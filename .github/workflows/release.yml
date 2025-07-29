@@ -31,8 +31,7 @@ jobs:
           $ahkCompiler    = "ahk\Compiler\Ahk2Exe.exe"
           $baseFile       = "ahk\Compiler\Unicode 32-bit.bin"
           $input          = "rpcl3im.ahk"
-          $repoRoot       = $env:GITHUB_WORKSPACE
-          $output         = Join-Path $repoRoot "rpcl3im.exe"
+          $output         = "rpcl3im.exe"
           $zipName        = "rpcl3im_release.zip"
           $icon           = "rpcl3_media\rpcl3v2.ico"
           $versionTxt     = "version.txt"
@@ -54,38 +53,33 @@ jobs:
           }
 
           # --- Compile ---
-            Write-Host ":: Starting AHK compilation"
           & $ahkCompiler /in $input /out $output /icon $icon /base $baseFile
-          
-            if (!(Test-Path $output)) {
-            Write-Error ":: Ahk2Exe did not produce an output file at $output."
-            exit 1
-          }
 
           # --- Always move EXE to $env:GITHUB_WORKSPACE ---
           $repoRoot = $env:GITHUB_WORKSPACE
           $compiledExe = Join-Path $PWD $output
           $finalExe    = Join-Path $repoRoot $output
 
+          # Normal move/copy logic
           if ((Test-Path $compiledExe) -and ($compiledExe -ne $finalExe)) {
             Move-Item $compiledExe $finalExe -Force
             Write-Host ":: Moved EXE to $finalExe"
           }
 
-          # Deep magic fallback
+          # Deep magic: if not found, check hardcoded place and copy
           if (!(Test-Path $finalExe)) {
             $knownGood = "D:\a\rpcl3-icon-manager\rpcl3-icon-manager\rpcl3im.exe"
             if (Test-Path $knownGood) {
               Write-Host ":: Found EXE at $knownGood after all! Copying to $finalExe"
               Copy-Item $knownGood $finalExe -Force
             }
+          }
 
-            Write-Host "Looking for output at: $finalExe"
-            Start-Sleep -Seconds 2
-            if (!(Test-Path $finalExe)) {
-              Write-Error ":: Build failed — output exe still not found at $finalExe"
-              exit 1
-            }
+          Write-Host "Looking for output at: $finalExe"
+          Start-Sleep -Seconds 2 # optional, for timing issues
+          if (!(Test-Path $finalExe)) {
+            Write-Error ":: Build failed — output exe still not found at $finalExe"
+            exit 1
           }
 
           # Add media folder files
@@ -124,7 +118,7 @@ jobs:
           # Clean up any missing files from allFiles
           $allFiles = $allFiles | Where-Object { $_ -and (Test-Path $_) }
 
-          # --- UPX compress ---
+          # --- UPX ---
           if (Test-Path "upx\upx.exe") {
             & "upx\upx.exe" --best --lzma $finalExe
           }
@@ -140,7 +134,6 @@ jobs:
               Write-Warning "Not adding (missing): $assetAbs"
             }
           }
-
           $zipPath = Join-Path $repoRoot $zipName
           Compress-Archive -Path $toZip -DestinationPath $zipPath -Force
 
