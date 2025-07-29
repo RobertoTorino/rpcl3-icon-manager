@@ -28,13 +28,21 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $repoRoot     = $env:GITHUB_WORKSPACE
-          $ahkCompiler  = "ahk\Compiler\Ahk2Exe.exe"
-          $baseFile     = "ahk\Compiler\Unicode 32-bit.bin"
-          $input        = "rpcl3im.ahk"
-          $outputName   = "rpcl3im.exe"
-          $icon         = "rpcl3_media\rpcl3v2.ico"
-          $zipName      = "rpcl3im_release.zip"
-
+          $ahkCompiler  = Join-Path $repoRoot "ahk\Compiler\Ahk2Exe.exe"
+          $baseFile     = Join-Path $repoRoot "ahk\Compiler\Unicode 32-bit.bin"
+          $input        = Join-Path $repoRoot "rpcl3im.ahk"
+          $outputName   = Join-Path $repoRoot "rpcl3im.exe"
+          $icon         = Join-Path $repoRoot "rpcl3_media\rpcl3v2.ico"
+          
+          & $ahkCompiler /in $input /out $outputName /icon $icon /base $baseFile
+          
+          if (!(Test-Path $outputName)) {
+          Write-Error ":: Compilation failed: $outputName not found"
+            exit 1
+          }
+          
+          Write-Host ":: Compiled EXE: $outputName"
+  
           $extraAssets = @(
             "README.txt", "rpcl3.ini", "LICENSE", "games.db",
             "sqlite3.dll", "version.txt", "version.dat", "version_template.txt"
