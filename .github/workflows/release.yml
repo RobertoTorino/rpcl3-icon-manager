@@ -31,7 +31,8 @@ jobs:
           $ahkCompiler    = "ahk\Compiler\Ahk2Exe.exe"
           $baseFile       = "ahk\Compiler\Unicode 32-bit.bin"
           $input          = "rpcl3im.ahk"
-          $output         = "rpcl3im.exe"
+          $output         = Join-Path $repoRoot "rpcl3im.exe"
+          $repoRoot       = $env:GITHUB_WORKSPACE
           $zipName        = "rpcl3im_release.zip"
           $icon           = "rpcl3_media\rpcl3v2.ico"
           $versionTxt     = "version.txt"
@@ -54,14 +55,13 @@ jobs:
 
           # --- Compile ---
             Write-Host ":: Starting AHK compilation"
-            & $ahkCompiler /in $input /out $output /icon $icon /base $baseFile
-            
+          & $ahkCompiler /in $input /out $output /icon $icon /base $baseFile
+          
             if (!(Test-Path $output)) {
-            Write-Error ":: Ahk2Exe did not produce an output file."
+            Write-Error ":: Ahk2Exe did not produce an output file at $output."
             exit 1
           }
 
-          $repoRoot   = $env:GITHUB_WORKSPACE
           $compiledExe = Join-Path $PWD $output
           $finalExe    = Join-Path $repoRoot $output
 
