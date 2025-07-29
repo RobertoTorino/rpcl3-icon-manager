@@ -40,7 +40,11 @@ jobs:
           Write-Error ":: Compilation failed: $outputName not found"
             exit 1
           }
+          Write-Host ":: Compiled EXE: $outputName"
           
+          # No need to move; already in repo root
+            $finalExe = $outputName
+                    
           Write-Host ":: Compiled EXE: $outputName"
   
           $extraAssets = @(
