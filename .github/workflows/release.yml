@@ -33,6 +33,7 @@ jobs:
           $input        = Join-Path $repoRoot "rpcl3im.ahk"
           $outputName   = Join-Path $repoRoot "rpcl3im.exe"
           $icon         = Join-Path $repoRoot "rpcl3_media\rpcl3v2.ico"
+          $zipName      = "rpcl3im_release.zip"
           
           & $ahkCompiler /in $input /out $outputName /icon $icon /base $baseFile
           
@@ -67,16 +68,14 @@ jobs:
           # Compile
           & $ahkCompiler /in $input /out $outputName /icon $icon /base $baseFile
           if (!(Test-Path $outputName)) {
-            Write-Error ":: Compilation failed: $outputName not found"
+          Write-Error ":: Compilation failed: $outputName not found"
             exit 1
           }
           Write-Host ":: Compiled EXE: $outputName"
+            
+          $finalExe = $outputName 
 
-          # Move EXE to repo root
-          $finalExe = Join-Path $repoRoot $outputName
-          Move-Item $outputName $finalExe -Force
-
-          # Optional: UPX compression
+          # UPX compression
           $upxPath = "upx\upx.exe"
           if (Test-Path $upxPath) {
             & $upxPath --best --lzma $finalExe
