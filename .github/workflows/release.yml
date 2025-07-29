@@ -36,11 +36,20 @@ jobs:
           $zipName      = "rpcl3im_release.zip"
           
           & $ahkCompiler /in $input /out $outputName /icon $icon /base $baseFile
-          
-          if (!(Test-Path $outputName)) {
+
+          # Wait up to 5 seconds for the file to appear
+            $maxRetries = 5
+            $retry = 0
+            while (!(Test-Path $outputName) -and ($retry -lt $maxRetries)) {
+            Start-Sleep -Seconds 1
+            $retry++
+          }
+            
+            if (!(Test-Path $outputName)) {
           Write-Error ":: Compilation failed: $outputName not found"
             exit 1
           }
+
           Write-Host ":: Compiled EXE: $outputName"
           
           # No need to move; already in repo root
