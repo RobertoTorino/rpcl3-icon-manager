@@ -7,6 +7,31 @@
 #NoEnv
 #Include %A_ScriptDir%\rpcl3_tools\SQLiteDB.ahk
 
+tempDir := A_Temp . "\rpcl3_tools"
+FileCreateDir, %tempDir%
+
+; --- Install CLI ---
+FileInstall, rpcl3_tools\vgmstream-cli.exe, %tempDir%\vgmstream-cli.exe, 1
+
+; --- Install required DLLs ---
+FileInstall, rpcl3_tools\avcodec-vgmstream-59.dll, %tempDir%\avcodec-vgmstream-59.dll, 1
+FileInstall, rpcl3_tools\avformat-vgmstream-59.dll, %tempDir%\avformat-vgmstream-59.dll, 1
+FileInstall, rpcl3_tools\avutil-vgmstream-57.dll, %tempDir%\avutil-vgmstream-57.dll, 1
+FileInstall, rpcl3_tools\libatrac9.dll, %tempDir%\libatrac9.dll, 1
+FileInstall, rpcl3_tools\libcelt-0061.dll, %tempDir%\libcelt-0061.dll, 1
+FileInstall, rpcl3_tools\libcelt-0110.dll, %tempDir%\libcelt-0110.dll, 1
+FileInstall, rpcl3_tools\libg719_decode.dll, %tempDir%\libg719_decode.dll, 1
+FileInstall, rpcl3_tools\libmpg123-0.dll, %tempDir%\libmpg123-0.dll, 1
+FileInstall, rpcl3_tools\libspeex-1.dll, %tempDir%\libspeex-1.dll, 1
+FileInstall, rpcl3_tools\libvorbis.dll, %tempDir%\libvorbis.dll, 1
+FileInstall, rpcl3_tools\swresample-vgmstream-4.dll, %tempDir%\swresample-vgmstream-4.dll, 1
+
+FileInstall, rpcl3_tools\SQLiteDB.ahk, %tempDir%\SQLiteDB.ahk, 1
+
+FileInstall, sqlite3.dll, %tempDir%\sqlite3.dll, 1
+FileInstall, games.db, %tempDir%\games.db, 1
+
+
 ; Global variables
 Global db
 Global CurrentGameId, CurrentGameTitle, CurrentIconPath, CurrentPic1FullPath, CurrentSnd0FullPath
