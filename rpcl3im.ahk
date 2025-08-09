@@ -10,8 +10,9 @@
 tempDir := A_Temp . "\rpcl3_tools"
 FileCreateDir, %tempDir%
 
-; --- Install CLI ---
+; --- Install CLI and AHK ---
 FileInstall, rpcl3_tools\vgmstream-cli.exe, %tempDir%\vgmstream-cli.exe, 1
+FileInstall, rpcl3_tools\SQLiteDB.ahk, %tempDir%\SQLiteDB.ahk, 1
 
 ; --- Install required DLLs ---
 FileInstall, rpcl3_tools\avcodec-vgmstream-59.dll, %tempDir%\avcodec-vgmstream-59.dll, 1
@@ -26,10 +27,10 @@ FileInstall, rpcl3_tools\libspeex-1.dll, %tempDir%\libspeex-1.dll, 1
 FileInstall, rpcl3_tools\libvorbis.dll, %tempDir%\libvorbis.dll, 1
 FileInstall, rpcl3_tools\swresample-vgmstream-4.dll, %tempDir%\swresample-vgmstream-4.dll, 1
 
-FileInstall, rpcl3_tools\SQLiteDB.ahk, %tempDir%\SQLiteDB.ahk, 1
-
-FileInstall, sqlite3.dll, %tempDir%\sqlite3.dll, 1
-FileInstall, games.db, %tempDir%\games.db, 1
+;FileInstall, sqlite3.dll, %tempDir%\sqlite3.dll, 1
+FileInstall, games.db, %A_ScriptDir%\games.db, 1
+FileInstall, rpcl3.ini, %A_Temp%\rpcl3.ini, 1
+FileInstall, SQLite3.dll, %A_ScriptDir%\SQLite3.dll, 1
 
 
 ; Global variables

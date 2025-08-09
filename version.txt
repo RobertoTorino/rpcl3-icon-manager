@@ -6,4 +6,4 @@ OriginalFilename=rpcl3.exe
 ProductName=RPCS3 Icon Manager
 ProductVersion=%%VERSION%%
 LegalCopyright=© 2025 Philip
-Comments=Built on 20250729_22 | Git Tag: %%GIT_TAG%%
+Comments=Built on 20250809_10 | Git Tag: %%GIT_TAG%%

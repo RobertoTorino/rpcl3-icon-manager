@@ -2,7 +2,7 @@
 $scriptName     = "rpcl3im.ahk"
 $baseExeName    = "rpcl3im"
 $ahk2exePath    = "ahk\Compiler\Ahk2Exe.exe"
-$upxPath        = "upx/upx.exe"
+$upxPath        = "upx\upx.exe"
 $iconPath       = "rpcl3_media\rpcl3v2.ico"
 $mediaFolder    = "rpcl3_media"
 $toolsFolder    = "rpcl3_tools"
@@ -28,6 +28,7 @@ $timestamp    = Get-Date -Format "yyyyMMdd_HH"
 Copy-Item $versionTpl $versionTxt -Force
 (Get-Content $versionTxt) -replace "%%DATETIME%%", $timestamp | Set-Content $versionTxt
 $timestamp | Set-Content $versionDat
+
 
 # === CLEANUP OLD FILES ===
 Remove-Item "$baseExeName.exe","$finalExe","build.log","$zipName" -ErrorAction SilentlyContinue
@@ -179,7 +180,7 @@ Write-Host "ZIP Archive: $zipName"
 Write-Host "Timestamp: $timestamp"
 
 
-# === COPY OUTPUT TO NEW_BUILDS FOLDER ===
+# === MOVE OUTPUT TO NEW_BUILDS FOLDER ===
 try {
     $buildFolder = "C:\repos\rpcl3-icon-manager\new_builds"
     $outputFiles = @(
@@ -202,20 +203,20 @@ try {
         New-Item -ItemType Directory -Path $buildFolder | Out-Null
     }
 
-    # Copy files to build folder
+    # Move files to build folder
     foreach ($file in $outputFiles) {
         if (Test-Path $file) {
-            Write-Host "_ Copying $file to $buildFolder"
-            Copy-Item $file -Destination $buildFolder -Force
+            Write-Host "_ Moving $file to $buildFolder"
+            Move-Item $file -Destination $buildFolder -Force
         } else {
             Write-Warning "File not found, skipping: $file"
         }
     }
 
-    Write-Host "_ All available files copied to: $buildFolder"
+    Write-Host "_ All available files moved to: $buildFolder"
 }
 catch {
-    Write-Error "Error copying build files: $_"
+    Write-Error "Error moving build files: $_"
 }
 
 
@@ -225,5 +226,10 @@ Write-Host "_ Done: $finalExe + $zipName"
 
 Write-Host "Script completed!" -ForegroundColor Yellow
 
-# Open folder
-Invoke-Item (Get-Item $finalExe).DirectoryName
+# Open folder of the moved executable
+$finalExeMoved = Join-Path $buildFolder (Split-Path $finalExe -Leaf)
+if (Test-Path $finalExeMoved) {
+    Invoke-Item (Get-Item $finalExeMoved).DirectoryName
+} else {
+    Write-Warning "Moved file not found: $finalExeMoved"
+}
