@@ -37,7 +37,7 @@ jobs:
           
           & $ahkCompiler /in $input /out $outputName /icon $icon /base $baseFile
 
-        # Wait up to 5 seconds for the file to appear
+          # Wait up to 5 seconds for the file to appear
             $maxRetries = 5
             $retry = 0
             while (!(Test-Path $outputName) -and ($retry -lt $maxRetries)) {
@@ -45,16 +45,18 @@ jobs:
             $retry++
           }
             
-          if (!(Test-Path $outputName)) {
-            Write-Error ":: Compilation failed: $outputName not found"
-          exit 1
+            if (!(Test-Path $outputName)) {
+          Write-Error ":: Compilation failed: $outputName not found"
+            exit 1
           }
-            Write-Host ":: Compiled EXE: $outputName"
 
-        # No need to move; already in repo root
-          $finalExe = $outputName
           Write-Host ":: Compiled EXE: $outputName"
-
+          
+          # No need to move; already in repo root
+            $finalExe = $outputName
+                    
+          Write-Host ":: Compiled EXE: $outputName"
+  
           $extraAssets = @(
             "README.txt", "rpcl3.ini", "LICENSE", "games.db",
             "sqlite3.dll", "version.txt", "version.dat", "version_template.txt"
@@ -63,26 +65,26 @@ jobs:
           $toolsFolder  = "rpcl3_tools"
           $emptyFolders = @("rpcl3_captures", "rpcl3_icons", "rpcl3_recordings", "rpcl3_screenshots")
 
-        # Verify required files
+          # Verify required files
           foreach ($file in @($ahkCompiler, $baseFile, $input)) {
             if (!(Test-Path $file)) {
               Write-Error "Missing required file: $file"
-            exit 1
+              exit 1
             }
-              Write-Host ":: Found: $file"
+            Write-Host ":: Found: $file"
           }
 
-        # Compile
+          # Compile
           & $ahkCompiler /in $input /out $outputName /icon $icon /base $baseFile
           if (!(Test-Path $outputName)) {
-            Write-Error ":: Compilation failed: $outputName not found"
+          Write-Error ":: Compilation failed: $outputName not found"
             exit 1
           }
-            Write-Host ":: Compiled EXE: $outputName"
-
+          Write-Host ":: Compiled EXE: $outputName"
+            
           $finalExe = $outputName 
 
-        # UPX compression
+          # UPX compression
           $upxPath = "upx\upx.exe"
           if (Test-Path $upxPath) {
             & $upxPath --best --lzma $finalExe
@@ -91,7 +93,7 @@ jobs:
             Write-Host ":: UPX not found, skipping compression"
           }
 
-        # Gather all files for ZIP
+          # Gather all files for ZIP
           $toZip = @($finalExe)
 
           foreach ($asset in $extraAssets) {
@@ -114,7 +116,7 @@ jobs:
             }
           }
 
-        # Create empty .placeholder files
+          # Create empty .placeholder files
           foreach ($folder in $emptyFolders) {
             $full = Join-Path $repoRoot $folder
             if (!(Test-Path $full)) {
@@ -126,7 +128,7 @@ jobs:
             Write-Host ":: Created: $placeholder"
           }
 
-        # Create the ZIP
+          # Create the ZIP
           $zipPath = Join-Path $repoRoot $zipName
           Compress-Archive -Path $toZip -DestinationPath $zipPath -Force
           Write-Host ":: ZIP created at $zipPath"
